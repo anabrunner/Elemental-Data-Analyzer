@@ -61,114 +61,40 @@ def sort_samples(samples_list):
 #Gets today's date and time to append to file name and avoid overwriting previous data.
 now = str(datetime.now().strftime("%Y%m%d%H%M"))
 
+#Config used by function for different types of analysis.
+config = {
+    "aquarium" : ["K, ppm", "Mo, ppm", "Ni, ppm", "Na, ppm", "Ba, ppm", "Zn, ppm"],
+    "river" :  ["K, ppm", "Ni, ppm", "Mo, ppm", "Ca, ppm", "Na, ppm", "Al, ppm", "Mg, ppm", "Zn, ppm"],
+    "lake" : ["K, ppm", "Ni, ppm", "Mo, ppm", "Na, ppm", "Ti, ppm", "Zn, ppm"],
+    "other" : ["K, ppm", "Ni, ppm", "Mo, ppm", "Ca, ppm", "Na, ppm", "Al, ppm", "Mg, ppm", "Zn, ppm", "Ba, ppm", "Ti, ppm"]
+}
+
 #Writes a csv file with just the respective sample type.
-def aquarium_samples(data, sample_list):
+def write_csv(data, sample_list, type):
     if sample_list == []:
         return
-    aquarium_headers = ["Sample", "K, ppm", "Mo, ppm", "Ni, ppm", "Na, ppm", "Ba, ppm", "Zn, ppm"]
-    aquarium_rows = []
-    file_name = "Aquarium %s.csv" % now
+    headers = ["Sample"] + config[type]
+    rows = []
+    file_name = "%s %s.csv" % (type, now)
     for sample in data:
         if sample in sample_list:
             sample_data = {
-                "Sample" : sample,
-                "K, ppm" : data[sample]["K, ppm"],
-                "Mo, ppm" : data[sample]["Mo, ppm"],
-                "Ni, ppm" : data[sample]["Ni, ppm"],
-                "Na, ppm" : data[sample]["Na, ppm"],
-                "Ba, ppm" : data[sample]["Ba, ppm"],
-                "Zn, ppm" : data[sample]["Zn, ppm"]
+                "Sample" : sample
             }
-            aquarium_rows.append(sample_data)
-    with open(pathlib.Path(__file__).parent/ "Aquarium" / file_name, "w+", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=aquarium_headers)
+            for item in config[type]:
+                sample_data[item] = data[sample][item]
+            rows.append(sample_data)
+    with open(pathlib.Path(__file__).parent / type / file_name, "w+", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
-        writer.writerows(aquarium_rows)
-    return f
-
-def river_samples(data, sample_list):
-    if sample_list == []:
-        return
-    river_headers = ["Sample", "K, ppm", "Ni, ppm", "Mo, ppm", "Ca, ppm", "Na, ppm", "Al, ppm", "Mg, ppm", "Zn, ppm"]
-    river_rows = []
-    file_name = "River %s.csv" % now
-    for sample in data:
-        if sample in sample_list:
-            sample_data = {
-                "Sample" : sample,
-                "K, ppm" : data[sample]["K, ppm"],
-                "Ni, ppm" : data[sample]["Ni, ppm"],
-                "Mo, ppm" : data[sample]["Mo, ppm"],
-                "Ca, ppm" : data[sample]["Ca, ppm"],
-                "Na, ppm" : data[sample]["Na, ppm"],
-                "Al, ppm" : data[sample]["Al, ppm"],
-                "Mg, ppm" : data[sample]["Mg, ppm"],
-                "Zn, ppm" : data[sample]["Zn, ppm"]
-            }
-            river_rows.append(sample_data)
-    with open(pathlib.Path(__file__).parent / "River" / file_name, "w+", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=river_headers)
-        writer.writeheader()
-        writer.writerows(river_rows)
-    return f
-
-def lake_samples(data, sample_list):
-    if sample_list == []:
-        return
-    lake_headers = ["Sample", "K, ppm", "Ni, ppm", "Mo, ppm", "Na, ppm", "Ti, ppm", "Zn, ppm"]
-    lake_rows = []
-    file_name = "Lake %s.csv" % now
-    for sample in data:
-        if sample in sample_list:
-            sample_data = {
-                "Sample" : sample,
-                "K, ppm" : data[sample]["K, ppm"],
-                "Ni, ppm" : data[sample]["Ni, ppm"],
-                "Mo, ppm" : data[sample]["Mo, ppm"],
-                "Na, ppm" : data[sample]["Na, ppm"],
-                "Ti, ppm" : data[sample]["Ti, ppm"],
-                "Zn, ppm" : data[sample]["Zn, ppm"]
-            }
-            lake_rows.append(sample_data)
-    with open(pathlib.Path(__file__).parent / "Lake" / file_name, "w+", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=lake_headers)
-        writer.writeheader()
-        writer.writerows(lake_rows)
-    return f
-
-def other_samples(data, sample_list):
-    if sample_list == []:
-        return
-    other_headers = ["Sample", "K, ppm", "Ni, ppm", "Mo, ppm", "Ca, ppm", "Na, ppm", "Al, ppm", "Mg, ppm", "Zn, ppm", "Ba, ppm", "Ti, ppm"]
-    other_rows = []
-    file_name = "Other %s.csv" % now
-    for sample in data:
-        if sample in sample_list:
-            sample_data = {
-                "Sample" : sample,
-                "K, ppm" : data[sample]["K, ppm"],
-                "Ni, ppm" : data[sample]["Ni, ppm"],
-                "Mo, ppm" : data[sample]["Mo, ppm"],
-                "Ca, ppm" : data[sample]["Ca, ppm"],
-                "Na, ppm" : data[sample]["Na, ppm"],
-                "Al, ppm" : data[sample]["Al, ppm"],
-                "Mg, ppm" : data[sample]["Mg, ppm"],
-                "Zn, ppm" : data[sample]["Zn, ppm"],
-                "Ba, ppm" : data[sample]["Ba, ppm"],
-                "Ti, ppm" : data[sample]["Ti, ppm"]
-            }
-            other_rows.append(sample_data)
-    with open(pathlib.Path(__file__).parent / "Other" / file_name, "w+", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=other_headers)
-        writer.writeheader()
-        writer.writerows(other_rows)
+        writer.writerows(rows)
     return f
 
 #Runs the functions, output will be separate csv files.
-aquarium_samples(icp_data, sort_samples(samples_list)[0])
-river_samples(icp_data, sort_samples(samples_list)[1])
-lake_samples(icp_data, sort_samples(samples_list)[2])
-other_samples(icp_data, sort_samples(samples_list)[3])
+write_csv(icp_data, sort_samples(samples_list)[0], "aquarium")
+write_csv(icp_data, sort_samples(samples_list)[1], "river")
+write_csv(icp_data, sort_samples(samples_list)[2], "lake")
+write_csv(icp_data, sort_samples(samples_list)[3], "other")
 
 #Moves raw data file to archive folder oncce its done processing.
 file_path.rename(pathlib.Path(__file__).parent / "Raw data" / user_file)
