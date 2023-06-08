@@ -2,14 +2,6 @@ import pathlib
 import csv
 from datetime import datetime
 
-#Asks user to input file name.
-print("Welcome to the automated elemental data analyzer for lake, river, and aquarium samples!") 
-print("Please type below the name of the file to be analyzed.")
-print("It should be in the same folder as this script and include the .csv extension!")
-print("For example: testdata.csv")
-user_file = input()
-file_path = pathlib.Path(__file__).parent / user_file
-
 #Reads csv file copied from ICP-OES software and saves data as a dictionary.
 def get_data(file_path):
     icp_data = {}
@@ -33,11 +25,6 @@ def get_data(file_path):
     file.close()
     return icp_data
 
-icp_data = get_data(file_path)
-
-#Writes a list of all samples.
-samples_list = list(icp_data.keys())
-
 #Sorts the samples into lists with just the respective sample types.
 def sort_samples(samples_list):
     standards = ["Blank", "Standard 1", "Standard 2", "Standard 3", "Continuing Calibration Blank", "Continuing Calibration Verification"]
@@ -58,9 +45,6 @@ def sort_samples(samples_list):
             other_samples_list.append(sample)
     return aquarium_samples_list, river_samples_list, lake_samples_list, other_samples_list
 
-#Gets today's date and time to append to file name and avoid overwriting previous data.
-now = str(datetime.now().strftime("%Y%m%d%H%M"))
-
 #Config used by function for different types of analysis.
 config = {
     "aquarium" : ["K, ppm", "Mo, ppm", "Ni, ppm", "Na, ppm", "Ba, ppm", "Zn, ppm"],
@@ -75,7 +59,14 @@ def write_csv(data, sample_list, type):
         return
     headers = ["Sample"] + config[type]
     rows = []
-    file_name = "%s %s.csv" % (type, now)
+    counter = 1
+    file_name = f"{type} {now} {counter}.csv"
+    file_path = pathlib.Path(__file__).parent / type / file_name
+    #Checks if the file already exists to prevent overwriting.
+    while file_path.is_file():
+        counter += 1
+        file_name = f"{type} {now} {counter}.csv"
+        file_path = pathlib.Path(__file__).parent / type / file_name
     for sample in data:
         if sample in sample_list:
             sample_data = {
@@ -84,17 +75,45 @@ def write_csv(data, sample_list, type):
             for item in config[type]:
                 sample_data[item] = data[sample][item]
             rows.append(sample_data)
-    with open(pathlib.Path(__file__).parent / type / file_name, "w+", newline="") as f:
+    with open(file_path, "w+", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(rows)
     return f
 
-#Runs the functions, output will be separate csv files.
-write_csv(icp_data, sort_samples(samples_list)[0], "aquarium")
-write_csv(icp_data, sort_samples(samples_list)[1], "river")
-write_csv(icp_data, sort_samples(samples_list)[2], "lake")
-write_csv(icp_data, sort_samples(samples_list)[3], "other")
+#Message upon running script to explain to user what will happen.
+print("Hello! Welcome to the Elemental Data Analyzer!")
+print("This script will analyze all .csv files in the same folder that this script is saved in.")
+print("Processed files will be saved in their respective sample type folders, and original files will be moved to the Raw Data folder.")
+print("Press 'Enter' to continue!")
+input()
 
-#Moves raw data file to archive folder oncce its done processing.
-file_path.rename(pathlib.Path(__file__).parent / "Raw data" / user_file)
+#Gets today's date to append to file name for ease of finding.
+now = str(datetime.now().strftime("%Y%m%d"))
+
+#Searches directory for files with .csv extension and appends it to a list.
+data_path = pathlib.Path(__file__).parent
+data_files = []
+for file in data_path.glob("*.csv"):
+    data_files.append(file.name)
+
+#Error message to user in case no files were found.
+if data_files == []:
+    print("Ooops! It appears no files were found! Please check that the data files have a .csv extension.")
+    print("Press 'Enter' to close this window.")
+    input()
+else:
+    #Loops through the data files found.
+    for file in data_files:
+        data_path = pathlib.Path(__file__).parent / file
+        icp_data = get_data(data_path)
+        #Writes a list of all the samples in this file.
+        samples_list = list(icp_data.keys())
+        #Runs the functions, output will be separate .csv files.
+        write_csv(icp_data, sort_samples(samples_list)[0], "aquarium")
+        write_csv(icp_data, sort_samples(samples_list)[1], "river")
+        write_csv(icp_data, sort_samples(samples_list)[2], "lake")
+        write_csv(icp_data, sort_samples(samples_list)[3], "other")
+        #Moves raw data file to archive folder once its done processing.
+        new_path = pathlib.Path(__file__).parent / "Raw data" / file
+        data_path.rename(new_path)
